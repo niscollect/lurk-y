@@ -148,6 +148,21 @@ const navigateToRoom = async (roomId) => {
         // Re-render UI with latest synced state
         initRoomView(roomId);
       }
+    } else if (res.status === 404) {
+      // Server-side JSON database restarted/reset. Automatically restore from our localStorage copy!
+      const rooms = getRoomsFromStorage();
+      const localRoom = rooms.find(r => r.room_id === roomId);
+      if (localRoom) {
+        showToast('Server room state reset. Restoring from your local backup...', 'info');
+        const restoreRes = await fetch('/api/room/restore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room: localRoom })
+        });
+        if (restoreRes.ok) {
+          showToast('Room successfully restored on server!', 'success');
+        }
+      }
     }
   } catch (err) {
     // Fail silently, utilizing local storage cache
@@ -1731,6 +1746,17 @@ window.addEventListener('DOMContentLoaded', () => {
               // Re-render UI with latest synced state
               initRoomView(activeRoomId);
             }
+          }
+        } else if (res.status === 404) {
+          // Server database wiped. Re-upload local backup silently
+          const rooms = getRoomsFromStorage();
+          const localRoom = rooms.find(r => r.room_id === activeRoomId);
+          if (localRoom) {
+            await fetch('/api/room/restore', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ room: localRoom })
+            });
           }
         }
       } catch (err) {

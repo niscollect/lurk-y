@@ -309,6 +309,26 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // --- API: Restore Room (Self-healing fallback) ---
+  if (pathname === '/api/room/restore' && req.method === 'POST') {
+    const body = await getRequestBody(req);
+    const { room } = body;
+
+    if (!room || !room.room_id) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Missing room object.' }));
+      return;
+    }
+
+    const rooms = loadRooms();
+    rooms[room.room_id.toUpperCase()] = room;
+    saveRooms(rooms);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(room));
+    return;
+  }
+
   // --- STATIC FILES SERVING (with Vercel rewrites emulation) ---
   let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
   const ext = path.extname(filePath);
