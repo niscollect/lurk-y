@@ -33,14 +33,14 @@ const showToast = (message, type = 'info') => {
 };
 
 // LocalStorage helpers
-const getRoomsFromStorage = () => JSON.parse(localStorage.getItem('rival_rooms')) || [];
-const saveRoomsToStorage = (rooms) => localStorage.setItem('rival_rooms', JSON.stringify(rooms));
-const getActiveRoomId = () => localStorage.getItem('rival_active_room');
+const getRoomsFromStorage = () => JSON.parse(localStorage.getItem('lurk_rooms')) || [];
+const saveRoomsToStorage = (rooms) => localStorage.setItem('lurk_rooms', JSON.stringify(rooms));
+const getActiveRoomId = () => localStorage.getItem('lurk_active_room');
 const setActiveRoomId = (roomId) => {
   if (roomId) {
-    localStorage.setItem('rival_active_room', roomId);
+    localStorage.setItem('lurk_active_room', roomId);
   } else {
-    localStorage.removeItem('rival_active_room');
+    localStorage.removeItem('lurk_active_room');
   }
 };
 
@@ -1783,7 +1783,7 @@ window.addEventListener('focus', () => {
 
 // Real-time synchronization across multiple tabs in the same browser
 window.addEventListener('storage', (e) => {
-  if (e.key === 'rival_rooms') {
+  if (e.key === 'lurk_rooms') {
     if (activeRoomId) {
       initRoomView(activeRoomId);
     } else {

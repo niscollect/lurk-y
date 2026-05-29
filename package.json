@@ -1,7 +1,7 @@
 {
-  "name": "rival",
+  "name": "lurk",
   "version": "1.0.0",
-  "description": "Rival - competitive problem-solving tracker for friend groups",
+  "description": "Lurk - competitive problem-solving tracker for friend groups",
   "main": "server.js",
   "type": "module",
   "scripts": {

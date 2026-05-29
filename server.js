@@ -351,5 +351,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Rival Sync Server running at http://localhost:${PORT}/`);
+  console.log(`Lurk Sync Server running at http://localhost:${PORT}/`);
 });
