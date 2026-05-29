@@ -1,0 +1,13 @@
+{
+  "name": "rival",
+  "version": "1.0.0",
+  "description": "Rival - competitive problem-solving tracker for friend groups",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {},
+  "private": true
+}

@@ -1,0 +1,59 @@
+{
+  "MKY2AZ": {
+    "room_id": "MKY2AZ",
+    "room_name": "Backend Test Prep",
+    "created_at": 1780059830309,
+    "last_weekly_reset": "2026-05-29",
+    "members": [
+      {
+        "member_id": "test_uuid_123",
+        "display_name": "Tester",
+        "leetcode_username": "kamyu",
+        "codeforces_username": "",
+        "daily_goal": 2,
+        "weekly_goal": 10,
+        "is_self": true,
+        "weekly_snapshots": [],
+        "cache": {
+          "last_fetched": 0
+        }
+      }
+    ],
+    "manual_logs": []
+  },
+  "52VKT3": {
+    "room_id": "52VKT3",
+    "room_name": "Smmr",
+    "created_at": 1780059913619,
+    "last_weekly_reset": "2026-05-29",
+    "members": [
+      {
+        "member_id": "g8ijfm4l0uub2j2xb4ph9k",
+        "display_name": "Nishant",
+        "leetcode_username": "collectnis",
+        "codeforces_username": "",
+        "daily_goal": 2,
+        "weekly_goal": 12,
+        "is_self": true,
+        "weekly_snapshots": [],
+        "cache": {
+          "last_fetched": 0
+        }
+      },
+      {
+        "member_id": "toqwk23868flqs655flgwh",
+        "display_name": "dinesh",
+        "leetcode_username": "asdfg",
+        "codeforces_username": "",
+        "daily_goal": 1,
+        "weekly_goal": 5,
+        "is_self": true,
+        "weekly_snapshots": [],
+        "cache": {
+          "last_fetched": 0
+        }
+      }
+    ],
+    "manual_logs": []
+  }
+}

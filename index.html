@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rival — Competitive Problem-Solving Tracker</title>
+  <meta name="description" content="A client-side competitive problem-solving tracker for small friend groups. Sync with LeetCode and Codeforces API instantly.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/index.css">
+</head>
+<body class="dark-theme">
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- MAIN SPA WRAPPER -->
+  <main id="app-container">
+    
+    <!-- SECTION 1: LANDING PAGE -->
+    <section id="landing-page" class="view-section active">
+      <div class="landing-hero">
+        <h1 class="logo-text">RIVAL</h1>
+        <p class="logo-sub">Competitive problem-solving tracker for friend groups.</p>
+      </div>
+
+      <!-- SAVED ROOMS PANEL -->
+      <div id="saved-rooms-container" class="saved-rooms-card glass-panel hidden">
+        <h3 class="saved-rooms-title">Your Active Rooms</h3>
+        <div id="saved-rooms-list" class="saved-rooms-list">
+          <!-- Dynamic list of joined rooms -->
+        </div>
+      </div>
+
+      <div class="landing-card glass-panel">
+        <div class="tab-headers">
+          <button id="tab-create-btn" class="tab-btn active" onclick="switchLandingTab('create')">Create Room</button>
+          <button id="tab-join-btn" class="tab-btn" onclick="switchLandingTab('join')">Join Room</button>
+        </div>
+
+        <div class="tab-contents">
+          <!-- CREATE ROOM FORM -->
+          <form id="create-room-form" class="tab-pane active" onsubmit="handleCreateRoom(event)">
+            <div class="form-group">
+              <label for="create-room-name">Room Name</label>
+              <input type="text" id="create-room-name" placeholder="e.g. Placement Prep" required>
+            </div>
+            
+            <div class="form-group-row">
+              <div class="form-group">
+                <label for="create-display-name">Your Display Name</label>
+                <input type="text" id="create-display-name" placeholder="e.g. Aryan" required>
+              </div>
+              <div class="form-group">
+                <label for="create-leetcode">LeetCode Username <span class="optional">(optional)</span></label>
+                <input type="text" id="create-leetcode" placeholder="e.g. aryan123">
+              </div>
+            </div>
+
+            <div class="form-group-row">
+              <div class="form-group">
+                <label for="create-codeforces">Codeforces Username <span class="optional">(optional)</span></label>
+                <input type="text" id="create-codeforces" placeholder="e.g. aryan_cf">
+              </div>
+            </div>
+
+            <div class="form-group-row">
+              <div class="form-group">
+                <label for="create-daily-goal">Daily Goal <span class="label-desc">(problems/day)</span></label>
+                <input type="number" id="create-daily-goal" min="1" max="100" value="1" required>
+              </div>
+              <div class="form-group">
+                <label for="create-weekly-goal">Weekly Goal <span class="label-desc">(problems/week)</span></label>
+                <input type="number" id="create-weekly-goal" min="1" max="500" value="5" required>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-create-submit" class="submit-btn btn-gradient">
+              <span class="btn-text">Generate Room</span>
+              <span class="btn-loader hidden"></span>
+            </button>
+          </form>
+
+          <!-- JOIN ROOM FORM -->
+          <form id="join-room-form" class="tab-pane" onsubmit="handleJoinRoom(event)">
+            <div class="form-group">
+              <label for="join-room-code">Room Code</label>
+              <input type="text" id="join-room-code" placeholder="e.g. X7K2QP" required pattern="[A-Za-z0-9]{6}" title="6-digit alphanumeric code">
+            </div>
+
+            <div class="form-group-row">
+              <div class="form-group">
+                <label for="join-display-name">Your Display Name</label>
+                <input type="text" id="join-display-name" placeholder="e.g. Aryan" required>
+              </div>
+              <div class="form-group">
+                <label for="join-leetcode">LeetCode Username <span class="optional">(optional)</span></label>
+                <input type="text" id="join-leetcode" placeholder="e.g. aryan123">
+              </div>
+            </div>
+
+            <div class="form-group-row">
+              <div class="form-group">
+                <label for="join-codeforces">Codeforces Username <span class="optional">(optional)</span></label>
+                <input type="text" id="join-codeforces" placeholder="e.g. aryan_cf">
+              </div>
+            </div>
+
+            <div class="form-group-row">
+              <div class="form-group">
+                <label for="join-daily-goal">Daily Goal <span class="label-desc">(problems/day)</span></label>
+                <input type="number" id="join-daily-goal" min="1" max="100" value="1" required>
+              </div>
+              <div class="form-group">
+                <label for="join-weekly-goal">Weekly Goal <span class="label-desc">(problems/week)</span></label>
+                <input type="number" id="join-weekly-goal" min="1" max="500" value="5" required>
+              </div>
+            </div>
+
+            <!-- Pre-fill URL details indicator -->
+            <div id="join-prefill-indicator" class="info-banner hidden">
+              <span class="info-icon">ℹ</span>
+              <span class="info-text">Pre-filling room members shared in link.</span>
+            </div>
+
+            <button type="submit" id="btn-join-submit" class="submit-btn btn-gradient">
+              <span class="btn-text">Join Room</span>
+              <span class="btn-loader hidden"></span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: ROOM PAGE (THE PRODUCT DASHBOARD) -->
+    <section id="room-page" class="view-section">
+      <!-- HEADER -->
+      <header class="room-header glass-panel">
+        <div class="header-left">
+          <button class="back-home-btn" onclick="navigateToLanding()" title="Back to Landing">←</button>
+          <div class="room-title-wrapper">
+            <h2 id="room-name-display" class="room-title">Placement Prep</h2>
+            <div class="room-code-tag" onclick="copyRoomCode()" title="Click to copy Room Code">
+              <span>Code: </span><strong id="room-code-display">X7K2QP</strong>
+              <span class="copy-icon">📋</span>
+            </div>
+            <button class="share-link-btn" onclick="copyJoinLink()" title="Copy invite link with members">Share Join Link 🔗</button>
+          </div>
+        </div>
+        
+        <div class="header-right">
+          <div class="refresh-meta">
+            <span class="member-count-badge"><span id="member-count-val">0</span> members</span>
+            <span class="last-sync-text">Refreshed: <span id="last-sync-val">Never</span></span>
+          </div>
+          <button class="btn-primary" onclick="syncActiveRoomData(true)" title="Trigger API refresh">
+            <span class="btn-icon">⟳</span> Sync Data
+          </button>
+          <button class="btn-secondary" onclick="openAddMemberModal()" title="Add a new member manually">
+            <span class="btn-icon">＋</span> Add Member
+          </button>
+        </div>
+      </header>
+
+      <!-- DASHBOARD CONTENT GRID -->
+      <div class="dashboard-grid">
+        
+        <!-- ROW 1: LEADERBOARD & COLLAPSIBLE PLATFORMS -->
+        <div class="grid-col-full glass-panel flex-column">
+          <div class="section-header">
+            <h3>🏆 Combined Leaderboard</h3>
+            <span class="sub-desc">Sorted by solved this week. Click columns to sort.</span>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="leaderboard-table" id="main-leaderboard">
+              <thead>
+                <tr>
+                  <th onclick="sortLeaderboard('rank')" class="sortable">Rank <span class="sort-indicator"></span></th>
+                  <th onclick="sortLeaderboard('name')" class="sortable text-left">Name <span class="sort-indicator"></span></th>
+                  <th onclick="sortLeaderboard('this_week')" class="sortable">This Week <span class="sort-indicator">▲</span></th>
+                  <th onclick="sortLeaderboard('this_month')" class="sortable">This Month <span class="sort-indicator"></span></th>
+                  <th onclick="sortLeaderboard('all_time')" class="sortable">All Time <span class="sort-indicator"></span></th>
+                  <th onclick="sortLeaderboard('goal_pct')" class="sortable">Goal Progress <span class="sort-indicator"></span></th>
+                  <th onclick="sortLeaderboard('streak')" class="sortable">Streak <span class="sort-indicator"></span></th>
+                  <th onclick="sortLeaderboard('last_active')" class="sortable">Last Active <span class="sort-indicator"></span></th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body">
+                <!-- Dynamic rows here -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- COLLAPSIBLE BREAKDOWNS -->
+          <div class="collapsible-breakdowns">
+            <!-- LEETCODE BREAKDOWN -->
+            <details class="breakdown-details" id="leetcode-details">
+              <summary class="breakdown-summary">
+                <span class="platform-icon lc-color">●</span> LeetCode Specific Breakdown
+                <span class="toggle-arrow">▼</span>
+              </summary>
+              <div class="breakdown-content">
+                <table class="platform-table">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Name</th>
+                      <th>LeetCode Username</th>
+                      <th>This Week</th>
+                      <th>This Month</th>
+                      <th>All Time</th>
+                      <th>Easy / Med / Hard</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leetcode-breakdown-body">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </details>
+
+            <!-- CODEFORCES BREAKDOWN -->
+            <details class="breakdown-details" id="codeforces-details">
+              <summary class="breakdown-summary">
+                <span class="platform-icon cf-color">●</span> Codeforces Specific Breakdown
+                <span class="toggle-arrow">▼</span>
+              </summary>
+              <div class="breakdown-content">
+                <table class="platform-table">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Name</th>
+                      <th>Codeforces Handle</th>
+                      <th>This Week</th>
+                      <th>This Month</th>
+                      <th>All Time</th>
+                      <th>CF Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody id="codeforces-breakdown-body">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- ROW 2: ATTENDANCE HEATMAP GRID -->
+        <div class="grid-col-full glass-panel">
+          <div class="section-header">
+            <h3>📅 30-Day Attendance Grid</h3>
+            <span class="sub-desc">Solves over the last 30 days. Tap/hover on squares for solve count.</span>
+          </div>
+          <div id="attendance-heatmap-container" class="attendance-container">
+            <!-- Dynamic grids -->
+          </div>
+        </div>
+
+        <!-- ROW 3: GOALS PANEL & MANUAL LOGS LIST -->
+        <div class="grid-col-left flex-column">
+          <div class="glass-panel flex-column full-height">
+            <div class="section-header">
+              <h3>🎯 Progress & Goals</h3>
+              <span class="sub-desc">Individual goals, weekly progress, and hit rate.</span>
+            </div>
+            <div id="goals-container" class="goals-panel-grid">
+              <!-- Dynamic goal cards -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 4: ROOM METRICS STATS -->
+        <div class="grid-col-right flex-column">
+          <div class="glass-panel flex-column full-height">
+            <div class="section-header">
+              <h3>⚡ Room Statistics</h3>
+              <span class="sub-desc">Room-wide highlights for the week.</span>
+            </div>
+            
+            <div class="stats-panel-grid">
+              <!-- Card 1: Leader -->
+              <div class="stat-metric-card">
+                <div class="stat-header">
+                  <span class="stat-title">Current Leader</span>
+                  <span class="stat-emoji">👑</span>
+                </div>
+                <div class="stat-value" id="stat-leader-val">—</div>
+                <div class="stat-desc" id="stat-leader-desc">Leading this week's scoreboard</div>
+              </div>
+
+              <!-- Card 2: Most Consistent -->
+              <div class="stat-metric-card">
+                <div class="stat-header">
+                  <span class="stat-title">Most Consistent</span>
+                  <span class="stat-emoji">🔥</span>
+                </div>
+                <div class="stat-value" id="stat-consistent-val">—</div>
+                <div class="stat-desc" id="stat-consistent-desc">Highest weekly goal hit rate</div>
+              </div>
+
+              <!-- Card 3: Longest Streak -->
+              <div class="stat-metric-card">
+                <div class="stat-header">
+                  <span class="stat-title">Longest Streak</span>
+                  <span class="stat-emoji">⚡</span>
+                </div>
+                <div class="stat-value" id="stat-streak-val">—</div>
+                <div class="stat-desc" id="stat-streak-desc">Best active problem-solving streak</div>
+              </div>
+
+              <!-- Card 4: Biggest Gap Closed -->
+              <div class="stat-metric-card">
+                <div class="stat-header">
+                  <span class="stat-title">Biggest Gap Closed</span>
+                  <span class="stat-emoji">📈</span>
+                </div>
+                <div class="stat-value" id="stat-gap-val">—</div>
+                <div class="stat-desc" id="stat-gap-desc">Most problems gained on leader this week</div>
+              </div>
+            </div>
+
+            <!-- MY MANUAL LOGS SUB-PANEL -->
+            <details class="breakdown-details margin-top-auto" id="my-logs-details">
+              <summary class="breakdown-summary">
+                📝 Your Manual Logs List
+                <span class="toggle-arrow">▼</span>
+              </summary>
+              <div class="breakdown-content max-height-300 scrollable">
+                <div id="manual-logs-list" class="logs-list">
+                  <!-- Dynamic Manual Logs list -->
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FLOATING ACTION BUTTON (MANUAL LOG) -->
+      <button class="fab-btn" onclick="openManualLogModal()" title="Add a manual problem solve log">
+        <span class="fab-icon">📝</span>
+      </button>
+    </section>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- MODAL 1: ADD MEMBER -->
+  <div class="modal-overlay" id="add-member-modal">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h4>➕ Add Friend to Room</h4>
+        <button class="modal-close-btn" onclick="closeAddMemberModal()">×</button>
+      </div>
+      <form id="add-member-form" onsubmit="handleAddMember(event)">
+        <div class="form-group">
+          <label for="add-display-name">Display Name</label>
+          <input type="text" id="add-display-name" placeholder="e.g. Aryan" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="add-leetcode">LeetCode Username <span class="optional">(optional)</span></label>
+          <input type="text" id="add-leetcode" placeholder="e.g. aryan123">
+        </div>
+
+        <div class="form-group">
+          <label for="add-codeforces">Codeforces Username <span class="optional">(optional)</span></label>
+          <input type="text" id="add-codeforces" placeholder="e.g. aryan_cf">
+        </div>
+
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="add-daily-goal">Daily Goal</label>
+            <input type="number" id="add-daily-goal" min="1" max="100" value="1" required>
+          </div>
+          <div class="form-group">
+            <label for="add-weekly-goal">Weekly Goal</label>
+            <input type="number" id="add-weekly-goal" min="1" max="500" value="5" required>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-add-member-submit" class="submit-btn btn-gradient">
+          <span class="btn-text">Add Member</span>
+          <span class="btn-loader hidden"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: MANUAL PROBLEM LOG -->
+  <div class="modal-overlay" id="manual-log-modal">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h4>📝 Log Problem Solve</h4>
+        <button class="modal-close-btn" onclick="closeManualLogModal()">×</button>
+      </div>
+      <form id="manual-log-form" onsubmit="handleManualLog(event)">
+        <div class="form-group">
+          <label for="log-platform">Platform</label>
+          <select id="log-platform" onchange="toggleCustomPlatformInput(this.value)">
+            <option value="HackerRank">HackerRank</option>
+            <option value="AtCoder">AtCoder</option>
+            <option value="GFG">GFG (GeeksforGeeks)</option>
+            <option value="LeetCode">LeetCode (Manual)</option>
+            <option value="Codeforces">Codeforces (Manual)</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group hidden" id="custom-platform-group">
+          <label for="log-custom-platform">Platform Name</label>
+          <input type="text" id="log-custom-platform" placeholder="e.g. CodeChef">
+        </div>
+
+        <div class="form-group">
+          <label for="log-problem-name">Problem Name <span class="optional">(optional)</span></label>
+          <input type="text" id="log-problem-name" placeholder="e.g. Array Manipulation">
+        </div>
+
+        <div class="form-group">
+          <label for="log-problem-url">Problem URL <span class="optional">(optional)</span></label>
+          <input type="url" id="log-problem-url" placeholder="e.g. https://hackerrank.com/...">
+        </div>
+
+        <div class="form-group">
+          <label for="log-date">Date Solved</label>
+          <input type="date" id="log-date" required>
+        </div>
+
+        <button type="submit" class="submit-btn btn-gradient">Log Problem</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP CONTROLLER ENTRY -->
+  <script src="/index.js"></script>
+</body>
+</html>
