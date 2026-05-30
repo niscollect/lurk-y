@@ -76,6 +76,14 @@ const isAdminIp = (ip) => {
   return adminIps.includes(ip);
 };
 
+const isRoomBlocked = (roomId) => {
+  if (!roomId) return false;
+  const blockedStr = process.env.BLOCKED_ROOMS || '';
+  if (!blockedStr) return false;
+  const blockedRooms = blockedStr.split(',').map(s => s.trim().toUpperCase());
+  return blockedRooms.includes(roomId.toUpperCase());
+};
+
 const generateRoomCode = (existingRooms) => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   while (true) {
@@ -156,6 +164,12 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (isRoomBlocked(roomId)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Forbidden: This room has been blocked by the server administrator.' }));
+      return;
+    }
+
     const rooms = loadRooms();
     const room = rooms[roomId];
 
@@ -228,6 +242,12 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (isRoomBlocked(room_id)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Forbidden: This room has been blocked by the server administrator.' }));
+      return;
+    }
+
     const rooms = loadRooms();
     const room = rooms[room_id.toUpperCase()];
 
@@ -264,6 +284,12 @@ const server = http.createServer(async (req, res) => {
     if (!room_id || !member) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Missing room_id or member.' }));
+      return;
+    }
+
+    if (isRoomBlocked(room_id)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Forbidden: This room has been blocked by the server administrator.' }));
       return;
     }
 
@@ -305,6 +331,12 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (isRoomBlocked(room_id)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Forbidden: This room has been blocked by the server administrator.' }));
+      return;
+    }
+
     const rooms = loadRooms();
     const room = rooms[room_id.toUpperCase()];
 
@@ -335,6 +367,12 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (isRoomBlocked(room_id)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Forbidden: This room has been blocked by the server administrator.' }));
+      return;
+    }
+
     const rooms = loadRooms();
     const room = rooms[room_id.toUpperCase()];
 
@@ -361,6 +399,12 @@ const server = http.createServer(async (req, res) => {
     if (!room || !room.room_id) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Missing room object.' }));
+      return;
+    }
+
+    if (isRoomBlocked(room.room_id)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Forbidden: This room has been blocked by the server administrator.' }));
       return;
     }
 

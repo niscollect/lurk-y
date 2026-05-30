@@ -181,21 +181,14 @@ const navigateToRoom = async (roomId) => {
         // Re-render UI with latest synced state
         initRoomView(roomId);
       }
-    } else if (res.status === 404) {
-      // Server-side JSON database restarted/reset. Automatically restore from our localStorage copy!
-      const rooms = getRoomsFromStorage();
-      const localRoom = rooms.find(r => r.room_id === roomId);
-      if (localRoom) {
-        showToast('Server room state reset. Restoring from your local backup...', 'info');
-        const restoreRes = await fetch('/api/room/restore', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: localRoom })
-        });
-        if (restoreRes.ok) {
-          showToast('Room successfully restored on server!', 'success');
-        }
       }
+    } else if (res.status === 403) {
+      showToast('This room has been blocked by the server administrator.', 'error');
+      const rooms = getRoomsFromStorage();
+      const updated = rooms.filter(r => r.room_id !== roomId);
+      saveRoomsToStorage(updated);
+      navigateToLanding();
+      return;
     }
   } catch (err) {
     // Fail silently, utilizing local storage cache
@@ -1800,6 +1793,12 @@ window.addEventListener('DOMContentLoaded', () => {
               body: JSON.stringify({ room: localRoom })
             });
           }
+        } else if (res.status === 403) {
+          showToast('This room has been blocked by the server administrator.', 'error');
+          const rooms = getRoomsFromStorage();
+          const updated = rooms.filter(r => r.room_id !== activeRoomId);
+          saveRoomsToStorage(updated);
+          navigateToLanding();
         }
       } catch (err) {
         // Silent catch on poll failure
