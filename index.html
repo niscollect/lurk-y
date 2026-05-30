@@ -75,6 +75,11 @@
               </div>
             </div>
 
+            <div class="form-group hidden" id="admin-password-group">
+              <label for="create-admin-password">Admin Password <span class="optional">(Required because your IP is not whitelisted)</span></label>
+              <input type="password" id="create-admin-password" placeholder="Enter admin passphrase">
+            </div>
+
             <button type="submit" id="btn-create-submit" class="submit-btn btn-gradient">
               <span class="btn-text">Generate Room</span>
               <span class="btn-loader hidden"></span>
@@ -433,6 +438,10 @@
       </form>
     </div>
   </div>
+
+  <footer class="global-footer">
+    <span id="user-ip-display">Detecting IP address...</span>
+  </footer>
 
   <!-- APP CONTROLLER ENTRY -->
   <script src="/index.js"></script>

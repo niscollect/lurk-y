@@ -7,6 +7,38 @@
 let activeRoomId = null;
 let currentSortColumn = 'this_week';
 let currentSortDirection = 'desc';
+let clientIsAdmin = false;
+
+// Fetch Client IP & Admin status
+const fetchClientIpAndStatus = async () => {
+  try {
+    const res = await fetch('/api/ip');
+    if (res.ok) {
+      const data = await res.json();
+      clientIsAdmin = data.isAdmin;
+      
+      const displayEl = document.getElementById('user-ip-display');
+      if (displayEl) {
+        displayEl.innerText = `Your IP: ${data.ip} (${clientIsAdmin ? 'Whitelisted Admin' : 'Not Whitelisted'})`;
+      }
+      
+      const pwdGroup = document.getElementById('admin-password-group');
+      if (pwdGroup) {
+        if (clientIsAdmin) {
+          pwdGroup.classList.add('hidden');
+          const pwdInput = document.getElementById('create-admin-password');
+          if (pwdInput) pwdInput.required = false;
+        } else {
+          pwdGroup.classList.remove('hidden');
+          const pwdInput = document.getElementById('create-admin-password');
+          if (pwdInput) pwdInput.required = true;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching client IP status:', err);
+  }
+};
 
 // --- UTILITIES & HELPERS ---
 const generateId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -108,6 +140,7 @@ const navigateToLanding = () => {
   document.getElementById('landing-page').classList.add('active');
   document.getElementById('room-page').classList.remove('active');
   renderSavedRoomsList();
+  fetchClientIpAndStatus();
 };
 
 const navigateToRoom = async (roomId) => {
@@ -1299,11 +1332,17 @@ const handleCreateRoom = async (event) => {
     cache: { last_fetched: 0 }
   };
 
+  const adminKey = document.getElementById('create-admin-password')?.value.trim() || '';
+
   try {
     const res = await fetch('/api/room/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ room_name: roomName || 'Placement Prep', member: newMember })
+      body: JSON.stringify({ 
+        room_name: roomName || 'Placement Prep', 
+        member: newMember,
+        admin_key: adminKey
+      })
     });
 
     if (res.ok) {
@@ -1707,6 +1746,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!activeRoomId) {
     renderSavedRoomsList();
   }
+
+  // Fetch client IP and admin protection gate status
+  fetchClientIpAndStatus();
 
   // Start polling for real-time multiplayer syncing
   setInterval(async () => {

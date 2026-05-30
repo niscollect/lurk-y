@@ -61,6 +61,21 @@ const getRequestBody = (req) => {
   });
 };
 
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket.remoteAddress;
+};
+
+const isAdminIp = (ip) => {
+  const adminIpsStr = process.env.ADMIN_IP || '';
+  if (!adminIpsStr) return false;
+  const adminIps = adminIpsStr.split(',').map(s => s.trim());
+  return adminIps.includes(ip);
+};
+
 const generateRoomCode = (existingRooms) => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   while (true) {
@@ -123,6 +138,15 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // --- API: Get Client IP and Admin Status ---
+  if (pathname === '/api/ip' && req.method === 'GET') {
+    const ip = getClientIp(req);
+    const isAdmin = isAdminIp(ip);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ip, isAdmin }));
+    return;
+  }
+
   // --- API: Get Room State ---
   if (pathname === '/api/room' && req.method === 'GET') {
     const roomId = parsedUrl.searchParams.get('id')?.toUpperCase();
@@ -149,12 +173,26 @@ const server = http.createServer(async (req, res) => {
   // --- API: Create Room ---
   if (pathname === '/api/room/create' && req.method === 'POST') {
     const body = await getRequestBody(req);
-    const { room_name, member } = body;
+    const { room_name, member, admin_key } = body;
 
     if (!room_name || !member) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Missing room_name or member.' }));
       return;
+    }
+
+    const ip = getClientIp(req);
+    const isAdmin = isAdminIp(ip);
+
+    // If not on whitelisted IP, check for the secret admin passphrase
+    if (!isAdmin) {
+      const expectedKey = process.env.ADMIN_KEY || 'lurkadmin';
+      if (admin_key !== expectedKey) {
+        console.warn(`[UNAUTHORIZED ACCESS WARNING] Failed room creation attempt from IP: ${ip} for room: "${room_name}"`);
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized: Your IP is not whitelisted, and the Admin Password is incorrect.' }));
+        return;
+      }
     }
 
     const rooms = loadRooms();
@@ -171,6 +209,8 @@ const server = http.createServer(async (req, res) => {
 
     rooms[roomId] = newRoom;
     saveRooms(rooms);
+
+    console.log(`[CREATE] Room "${room_name}" (Code: ${roomId}) created successfully by ${member.display_name} from IP: ${ip} (Total rooms: ${Object.keys(rooms).length})`);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(newRoom));
@@ -209,6 +249,8 @@ const server = http.createServer(async (req, res) => {
     rooms[room_id.toUpperCase()] = room;
     saveRooms(rooms);
 
+    console.log(`[JOIN] Member "${member.display_name}" joined room: ${room_id.toUpperCase()} (Total members: ${room.members.length})`);
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(room));
     return;
@@ -244,6 +286,8 @@ const server = http.createServer(async (req, res) => {
     room.members.push(member);
     rooms[room_id.toUpperCase()] = room;
     saveRooms(rooms);
+
+    console.log(`[ADD-MEMBER] Friend "${member.display_name}" added to room: ${room_id.toUpperCase()} (Total members: ${room.members.length})`);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(room));
@@ -324,6 +368,8 @@ const server = http.createServer(async (req, res) => {
     rooms[room.room_id.toUpperCase()] = room;
     saveRooms(rooms);
 
+    console.log(`[RESTORE] Room self-healed/restored: ${room.room_id.toUpperCase()} (Total active rooms: ${Object.keys(rooms).length})`);
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(room));
     return;
@@ -351,5 +397,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
+  const rooms = loadRooms();
+  const count = Object.keys(rooms).length;
   console.log(`Lurk Sync Server running at http://localhost:${PORT}/`);
+  console.log(`[STARTUP] Loaded ${count} active rooms from persistent database.`);
 });

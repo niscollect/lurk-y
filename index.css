@@ -1410,3 +1410,21 @@ input:focus, select:focus {
   color: var(--accent-cyan);
 }
 
+/* ==========================================
+   GLOBAL FOOTER IP DISPLAY
+   ========================================== */
+.global-footer {
+  margin-top: auto;
+  padding: 16px 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.35;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s ease;
+  text-align: center;
+}
+.global-footer:hover {
+  opacity: 0.8;
+}
+
+
